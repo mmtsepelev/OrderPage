@@ -1,0 +1,42 @@
+<template>
+    <lightning-card title="Order Items" icon-name="custom:custom57">
+        <lightning-record-view-form
+        record-id={recordId}
+        object-api-name="Order">
+        <div class="c-container">
+            <lightning-layout>
+                <lightning-layout-item padding="horizontal-small">
+                    <lightning-output-field field-name="OrderNumber">
+                    </lightning-output-field>
+                </lightning-layout-item>
+                <lightning-layout-item padding="horizontal-small">
+                    <lightning-output-field field-name="Name">
+                    </lightning-output-field>
+                </lightning-layout-item>
+                <lightning-layout-item padding="horizontal-small">
+                    <lightning-output-field field-name="Status">
+                    </lightning-output-field>
+                </lightning-layout-item>
+                <lightning-layout-item padding="horizontal-small">
+                    <lightning-output-field field-name="TotalAmount">
+                    </lightning-output-field>
+                </lightning-layout-item>
+            </lightning-layout>
+        </div>
+        </lightning-record-view-form>
+            <template if:true={tableData}>
+                <div class="slds-m-around_medium table_cont">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={tableData}
+                        columns={columns}
+                        max-row-selection=1
+                        hide-checkbox-column="true">
+                    </lightning-datatable>
+                </div>
+            </template>
+        <div class="slds-m-around_medium">
+            <lightning-button label="Confirm" title="Confirm" onclick={handleConfirmOrder} disabled={disabled}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

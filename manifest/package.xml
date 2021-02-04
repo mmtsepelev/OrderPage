@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>Connection_Setting__mdt</members>
+        <name>CustomMetadata</name>
+    </types>
+    <types>
+        <members>Order.RetryConfirm__c</members>
+        <name>CustomFields</name>
+    </types>
+    <types>
+        <members>ProductDataProvider</members>
+        <members>HTTPConnector</members>
+        <members>HTTPRequestBatch</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>ConfirmResponseMock</members>
+        <members>HTTPRequestBatch_Test</members>
+        <name>ApexTestSuite</name>
+    </types>
+    <types>
+        <members>availableProducts</members>
+        <members>currentOrder</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>OrderDataChannel__c</members>
+        <name>LightningMessageChannel</name>
+    </types>
+    <types>
+        <members>Requestcatcher</members>
+        <name>RemoteSiteSetting</name>
+    </types>
+    <version>50.0</version>
+</Package>

@@ -1,0 +1,21 @@
+<template>
+    <lightning-card title="Pricebook Products" icon-name="custom:custom57">
+            <template if:true={tableData}>
+                <div class="slds-m-around_medium table_cont">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={tableData}
+                        columns={columns}
+                        onrowselection={getSelectedRows}
+                        selected-rows={preSelectedRows}
+                        enable-infinite-loading="true"
+                        onloadmore={loadMore}
+                        load-more-offset="50">
+                    </lightning-datatable>
+                </div>
+            </template>
+        <div class="slds-m-around_medium">
+            <lightning-button label="Add" title="Add" onclick={addOrderItem} disabled={disabled}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

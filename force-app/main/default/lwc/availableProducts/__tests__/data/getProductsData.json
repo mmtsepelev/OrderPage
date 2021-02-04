@@ -1,0 +1,24 @@
+{
+    "pbeSize": 17,
+    "productList": [
+        {
+            "Product2Id": "01t09000001c91gAAA",
+            "pbeId": "01u090000031gaNAAQ",
+            "productName": "GenWatt Diesel 10kW",
+            "productPrice": 5000
+        },
+        {
+            "Product2Id": "01t09000001c91nAAA",
+            "pbeId": "01u090000031gaUAAQ",
+            "productName":"GenWatt Diesel 1000kW",
+            "productPrice": 100000
+        },
+        {
+            "Product2Id": "01t09000001c91fAAA",
+            "pbeId": "01u090000031gaMAAQ",
+            "productName": "GenWatt Diesel 200kW",
+            "productPrice": 25000
+        }
+    ]
+
+}
