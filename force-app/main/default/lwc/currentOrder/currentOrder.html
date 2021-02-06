@@ -17,9 +17,11 @@
                     <lightning-output-field field-name="Status">
                     </lightning-output-field>
                 </lightning-layout-item>
-                <lightning-layout-item padding="horizontal-small">
-                    <lightning-output-field field-name="TotalAmount">
-                    </lightning-output-field>
+                <lightning-layout-item padding="around-small">
+                    <lightning-formatted-rich-text value='<h3>Total Amount</h3'></lightning-formatted-rich-text>
+                </lightning-layout-item>
+                <lightning-layout-item padding="around-medium">
+                    <div style="font-size:13pt"><lightning-formatted-number value={totalAmount} format-style="currency" currency-code="EUR"></lightning-formatted-number></div>
                 </lightning-layout-item>
             </lightning-layout>
         </div>

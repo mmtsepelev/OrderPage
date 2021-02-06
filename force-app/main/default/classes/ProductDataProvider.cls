@@ -1,15 +1,16 @@
+/* This class provides data objects to show in the lightning-datatable on AvailableProducts component.
+* Table loads required data by blocks of defined size when user scrolls down throught the records. */
 public with sharing class ProductDataProvider {
     
-    private static final Integer DATA_BLOCK_SIZE = 50;
-    private static final Integer SELECTION_BLOCK_SIZE = 10;
-    private static final Integer MAX_BLOCK_SIZE = 50000; /* Not limited by SOQL per-transaction limits */
+    private static final Integer DATA_BLOCK_SIZE = 50; /* Number of records loaded by loadMore call on table scrolling. */
     
     
-    /* Wrapper class to hold product data block information which will be passed in AvailableProducts LWC component. */
+    /* Wrapper class to hold product data block information collected by SOQL queries from different objects.
+    * It will be passed in AvailableProducts LWC component to be shown in the table. */
     public class ProductDataBlock {
         /* Total Pricebook entries count */
         @AuraEnabled public Integer pbeSize;
-        /* Pricebook entries data block */
+        /* Pricebook entries data, holds actual data for the table */
         @AuraEnabled public List<ProductData> productList;
     
         public ProductDataBlock() {
@@ -17,7 +18,7 @@ public with sharing class ProductDataProvider {
         }
     }
     
-    /* Wrapper class to hold product data collected by SOQL queries in getProductsBlock method*/
+    /* Wrapper class to hold product data collected by SOQL queries in getProductsBlock method. */
     public class ProductData {
         @AuraEnabled public Id pbeId;
         @AuraEnabled public Id Product2Id;
@@ -34,13 +35,14 @@ public with sharing class ProductDataProvider {
         }
     }
 
-    /* Use cacheble=false since we dont want data to be cached in LDS, otherwise there will be same items shown
-    *  several times on the list. */
+    /* Use cacheble=false since we dont want data to be cached in LDS, otherwise it will be possible that
+    * same items could be shown several times in the table because of LDS cache is not updated by framework. */
     @AuraEnabled(cacheable=false)
-    public static ProductDataProvider.ProductDataBlock getProductsData(Id orderId, Integer offset){
+    public static ProductDataBlock getProductsData(Id orderId, Integer offset){
         try {
             return ProductDataProvider.getProductsBlock(orderId, offset, DATA_BLOCK_SIZE);
         } catch (Exception e) {
+            /* Rethow exception to be shown in error toast in the component. */
             throw new AuraHandledException(e.getMessage());
         }
     }
@@ -89,10 +91,10 @@ public with sharing class ProductDataProvider {
         return pdb;
     }
 
-    /** Method gets line items of current Order on component connected to DOM. */
+    /* Method gets line items of current Order. */
     @AuraEnabled(cacheable=false)
     public static List<OrderItem> getOrderItems(Id OrderId){
-        System.debug('getOrderItems orderId: '+OrderId);
+
         List<OrderItem> orderItems = [SELECT Id, 
                                             OrderId, 
                                             Order.TotalAmount, 
@@ -108,7 +110,8 @@ public with sharing class ProductDataProvider {
     }
 
 
-    /** Methods upserts list of newly added and updated products from selection. Dont want LDS cache. */
+    /* Methods upserts the list of newly added and updated products from selection and returns succesfully upserted records.
+    * Caching is disabled in order to get only actual records from database instead of cached in LDS. */
     @AuraEnabled(cacheable=false)
     public static List<OrderItem> upsertOrderItems(Id OrderId, String selectionJSON){
         try{
@@ -131,15 +134,10 @@ public with sharing class ProductDataProvider {
                 }
             }
 
-            for(OrderItem item : upsertItems){
-                System.debug(item);
-            }
-
             upsert upsertItems;
             return getOrderItems(OrderId);
         } catch (Exception e) {
-            /* If DML failed, re-throw exception
-            ** to LWC component to show error toast. */
+            /* Rethrow exception to LWC component to show error toast in case if upsert fails. */
             throw new AuraHandledException(e.getMessage());
         }
     }

@@ -5,8 +5,9 @@
         <name>CustomMetadata</name>
     </types>
     <types>
-        <members>Order.RetryConfirm__c</members>
-        <name>CustomFields</name>
+        <members>Order.Reconfirm__c</members>
+        <members>Order.Retries__c</members>
+        <name>CustomField</name>
     </types>
     <types>
         <members>ProductDataProvider</members>

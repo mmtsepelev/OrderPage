@@ -3,51 +3,26 @@ public with sharing class HTTPRequestBatch_Test {
     private static final Integer BATCH_SIZE = 100;
     private static final Integer PRODUCTS_NUM = 10;
 
+    /* Create test records for each test. */ 
     @testSetup 
     static void createTestData() {
-        Account acc = new Account(Name='Test');
-        insert acc;
-
-        // Create test Orders for Account
-        Id pbId = Test.getStandardPricebookId();
-        List<Order> orders= new List<Order>();
-        for(Integer i=0; i<BATCH_SIZE; i++)
-        {
-            orders.add(new Order( Pricebook2Id = pbId, AccountId = acc.Id, EffectiveDate = Date.today(), Status='Draft', RetryConfirm__c = 0));
-        }
-        insert orders;
-
-        // Create Products for standard PriceBook entries
-        List<Product2> prods = new List<Product2>();
-            for(Integer i = 0; i< PRODUCTS_NUM; i++){
-            prods.add(new Product2(Name = 'Product '+i, isActive=true));
-        }
-        insert prods;
-
-        // Create standard PriceBook entries
-        List<PricebookEntry> pbes = new List<PricebookEntry>();
-        for(Integer i=0; i<PRODUCTS_NUM; i++){
-            pbes.add(new PricebookEntry(Pricebook2Id = pbId, Product2Id = prods[i].Id, UnitPrice = Math.random()*100));
-        }
-        insert pbes;
-
-        List<OrderItem> orderItems = new List<OrderItem>();
-        for(Order order : orders){
-            for(Integer i = 0; i< PRODUCTS_NUM; i++){
-                orderItems.add(new OrderItem(OrderId = order.Id, Product2Id = prods[i].Id, PricebookEntryId = pbes[i].Id, Quantity = 1, UnitPrice = Math.random()*100));
-            }
-        }
-        insert orderItems;
+        TestUtils.createTestData(BATCH_SIZE, PRODUCTS_NUM);
     }
 
     @isTest
-    static void testBatch() 
+    static void Test_Batch() 
     {
+        /* Set HTTP mock object for the test since we are making callouts. */
         Test.setMock(HttpCalloutMock.class, new ConfirmResponseMock());
-            Test.startTest();
+
+        Test.startTest();
+            /* Run batch under test. */
             HTTPRequestBatch.run();
         Test.stopTest();
 
-
+        /* Test if Orders were activated. */
+        for(Order order : [SELECT Id, Status FROM Order]){
+            System.assertEquals('Activated', order.Status);
+        }
     }
 }

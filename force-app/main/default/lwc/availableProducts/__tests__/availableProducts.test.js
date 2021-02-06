@@ -7,7 +7,7 @@ import { getRecord } from 'lightning/uiRecordApi';
 import getProductsData from '@salesforce/apex/ProductDataProvider.getProductsData';
 
 import { publish, subscribe, MessageContext } from 'lightning/messageService';
-import ORDER_MC from '@salesforce/messageChannel/OrderDataChannel__c';
+import MESSAGE_CHANNEL from '@salesforce/messageChannel/OrderDataChannel__c';
 
 const messageContextWireAdapter = registerTestWireAdapter(MessageContext);
 
@@ -78,7 +78,7 @@ describe('c-available-products', () => {
             // Test if publish was called with the correct data
             expect(publish).toHaveBeenCalledWith(
                 undefined,
-                ORDER_MC,
+                MESSAGE_CHANNEL,
                 mockMessageAddProduct
             );
         });
@@ -112,7 +112,7 @@ describe('c-available-products', () => {
     it('Test Lightning Message Channel Subscribe method is called', () => {
         // Test if component subscribed after connected to the DOM
         expect(subscribe).toHaveBeenCalled();
-        expect(subscribe.mock.calls[0][1]).toBe(ORDER_MC);
+        expect(subscribe.mock.calls[0][1]).toBe(MESSAGE_CHANNEL);
     });
 
 
@@ -124,7 +124,7 @@ describe('c-available-products', () => {
         const payload = {"TYPE":"Confirmation"};//mockMessageConfirmed;
         publish(
             messageContextWireAdapter,
-            ORDER_MC,
+            MESSAGE_CHANNEL,
             payload
         );
 

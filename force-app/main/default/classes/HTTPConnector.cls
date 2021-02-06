@@ -1,11 +1,12 @@
-/** Utility class encapsulating HTTP connection methods and data.
- * Connection data is stored in custom metadata type.
-*/
+/* Utility class encapsulating HTTP connection methods and data.
+ * Connection data like URL and method are stored in Connection_Setting__mdt custom metadata record. */
 
 public with sharing class HTTPConnector {
 
+    /* Custom metadata records name which holds URL and method name. */
     private static final String CONNECTION_SETTINGS = 'requestcatcher';
 
+    /* Request body class to be serialized and sent in HTTP request. */
     public class RequestBody {
         Map<String, Object> body;
 
@@ -23,6 +24,8 @@ public with sharing class HTTPConnector {
         }
     }
 
+
+    /* Request class incapsulates HTTP request data like URL, method, request body and execute() method which does actual request. */ 
     public class Request {
         String endpoint;
         String method;
@@ -46,19 +49,28 @@ public with sharing class HTTPConnector {
         }
     }
 
-    /* Reason to use imperative call ? */
+
+    /* This method is called if Confirm button is pressed in CurrentOrder component. 
+    * It queries current Order items data from database, packs it to required request body format 
+    * and sends it to external system. 
+    * @param: orderId - Id of the Order to be confirmed in external system.
+    * @return: StatusCode of HTTP request. It will be used to update Order Status in UI for successful request. */
     @AuraEnabled(cacheable=false)
     public static Integer confirmOrder(Id orderId){
+        Order order;
         try {
-            Order order = [SELECT Account.AccountNumber, 
+            /* Get Order record data with related OrderItems. */
+            order = [SELECT Account.AccountNumber, 
                     OrderNumber, 
                     Type, 
                     Status, 
-                    RetryConfirm__c,
+                    Reconfirm__c,
+                    Retries__c,
                     (SELECT Product2.Name, Product2.ProductCode, UnitPrice, Quantity FROM OrderItems) 
                     FROM Order 
                     WHERE Id =: orderId];
 
+            /* Build request body object to be sirialized in request and fill it with Order data. */
             List<Map<String,Object>> products = new List<Map<String,Object>>();
             for(OrderItem item : order.OrderItems){
                 Map<String,Object> field = new Map<String,Object>();
@@ -71,31 +83,45 @@ public with sharing class HTTPConnector {
 
             RequestBody body = new RequestBody(order.Account.AccountNumber, order.OrderNumber, order.Type, order.Status, products);
 
+            /* Send HTTP request to confirm Order in external system. */ 
             HttpResponse resp = doCallout(body);
-            /* If success - update Order Status to Active ( optionally udate order items to be linked to the order. */
+
             Integer statusCode = resp.getStatusCode();
-            System.Debug('HTTP Request statusCode: ' + statusCode);
+
+            /* If success - update Order Status to Active and reset fields processed by batch. */
             if(statusCode == 200){
                 order.Status = 'Activated';
-                order.RetryConfirm__c = 0;
+                order.Reconfirm__c = true;
+                order.Retries__c = 0;
             }else{
-                order.RetryConfirm__c = order.RetryConfirm__c + 1;
+                /* If server returned an error status code - increment retries number and set 
+                * Reconfirm field in order for record to be picked up by batch job to retry the request after defined time. */
+                order.Reconfirm__c = true;
+                order.Retries__c = order.Retries__c + 1;
             }
 
-            // Skip update if method is called from batch 
+            /* Skip update if method is called from batch context. */
             if(!System.isBatch()){
                 update order;
             }
             
             return statusCode;
         } catch (Exception e) {
-            /* If callout failed, update Order to be picked up by batch job to retry the request and re-throw exception
+            /* If callout fails, update Order to be picked up by batch job to retry the request and re-throw exception
             ** to LWC component to show error toast. */
+            if(!System.isBatch()){
+                order.Reconfirm__c = true;
+                order.Retries__c = order.Retries__c + 1;
+                update order;
+            }
+
             System.Debug(e.getMessage());
             throw new AuraHandledException(e.getMessage());
         }
     }
     
+
+    /* Method reads connection settings from custom metadata and executes the request with provided request body. */
     public static HttpResponse doCallout (RequestBody body) {
         Connection_Setting__mdt setting = [SELECT DeveloperName, endpoint__c, method__c 
                                                 FROM Connection_Setting__mdt 
