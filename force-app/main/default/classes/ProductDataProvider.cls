@@ -134,6 +134,11 @@ public with sharing class ProductDataProvider {
                 }
             }
 
+            
+            for(OrderItem item : upsertItems){
+                System.Debug('Upserting: '+item);
+            }
+            
             upsert upsertItems;
             return getOrderItems(OrderId);
         } catch (Exception e) {

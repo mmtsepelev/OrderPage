@@ -30,6 +30,10 @@
         <name>LightningMessageChannel</name>
     </types>
     <types>
+        <members>Order_View</members>
+        <name>FlexiPage</name>
+    </types>
+    <types>
         <members>Requestcatcher</members>
         <name>RemoteSiteSetting</name>
     </types>

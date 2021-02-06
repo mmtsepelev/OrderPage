@@ -75,7 +75,7 @@ export default class CurrentOrder extends LightningElement {
     }
     
     connectedCallback(){
-        /* Subscribe to LMS messages channel. */
+        /* Subscribe to LMS messages channel to get Order updates from AvailableProducts component. */
         this.subscribe();
         /* Read existing OrderItems from database. */
         getOrderItems( { OrderId : this.recordId } )

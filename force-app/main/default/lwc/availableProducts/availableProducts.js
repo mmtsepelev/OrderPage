@@ -51,7 +51,7 @@ export default class AvailableProducts extends LightningElement {
     tableElement;
     selectedRows = [];
 
-    /* Data offset for loadMore table nethod for scrolling. */
+    /* Data offset for loadMore table method. */
     offset = INITIAL_OFFSET;
 
     /* Get current record data through LDS @wire service. */
@@ -73,6 +73,9 @@ export default class AvailableProducts extends LightningElement {
     }
 
     connectedCallback() {
+        /* Subscribe to Message Channel to get Order confirmation updates from CurrentOrder component. */
+        this.subscribe();
+
         /* Read initial data block for the table when componend added to DOM. */
         getProductsData( {orderId : this.recordId, offset : this.offset} )
             .then(data => {
@@ -84,9 +87,6 @@ export default class AvailableProducts extends LightningElement {
             .catch(error => {
                 this.showErrorToast(error);
             });
-
-        /* Subscribe to Message Channel to get Order confirmation updates from CurrentOrder component. */
-        this.subscribe();
     }
 
 
@@ -122,24 +122,23 @@ export default class AvailableProducts extends LightningElement {
     /* Load next data block from database whe user scrolls down through the table. */
     loadMore(event) {
         if(event.target){
+            /* Display spinner when data is loading. */
             event.target.isLoading = true;
         }
         
         this.tableElement = event.target;
-        this.loadStatus = 'Loading';
 
         getProductsData( {orderId : this.recordId, offset : this.offset} )
             .then(data => {
                 console.log(COMPONENT+' getProductsData()', data);
                 this.tableData = this.tableData.concat(data.productList); 
                 this.offset = this.offset + data.productList.length;
-                this.loadStatus = '';
                 if (this.tableData.length  >= this.maxRows) {
                     this.tableElement.enableInfiniteLoading = false;
-                    this.loadStatus = 'No more data to load';
                 }
                 
                 if(this.tableElement){
+                    /* Remove spinner. */
                     this.tableElement.isLoading = false;
                 } 
             }
