@@ -4,6 +4,7 @@ public with sharing class HTTPConnector_Test {
     private static final Integer ORDERS_NUM = 1;            // Number of Order records to be used by tests
     private static final Integer PRODUCTS_NUM = 10;         // Number Products per Order to be used by tests
     private static final Integer SUCCESS_RESPONSE = 200;    // Success HTTP response code
+    private static final Integer ERROR_RESPONSE = 500;      // Error HTTP response code
 
     /* Create test records for each test. */ 
     @testSetup 
@@ -16,7 +17,7 @@ public with sharing class HTTPConnector_Test {
         Integer responseCode;
         Order order = [SELECT Id, Status FROM Order];
         /* Set HTTP mock object for the test since we are making callouts. */
-        Test.setMock(HttpCalloutMock.class, new ConfirmResponseMock());
+        Test.setMock(HttpCalloutMock.class, new ConfirmResponseMock(SUCCESS_RESPONSE));
 
         /* Run actual test with new set if limits. */
         Test.startTest();

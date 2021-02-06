@@ -13,12 +13,12 @@
         <members>ProductDataProvider</members>
         <members>HTTPConnector</members>
         <members>HTTPRequestBatch</members>
-        <name>ApexClass</name>
-    </types>
-    <types>
         <members>ConfirmResponseMock</members>
+        <members>HTTPConnector_Test</members>
         <members>HTTPRequestBatch_Test</members>
-        <name>ApexTestSuite</name>
+        <members>ProductDataProvider_Test</members>
+        <members>TestUtils</members>
+        <name>ApexClass</name>
     </types>
     <types>
         <members>availableProducts</members>
