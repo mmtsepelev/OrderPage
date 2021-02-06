@@ -1,3 +1,4 @@
+/* Test class for HTTPRequestBatch features. */
 @isTest
 public with sharing class HTTPRequestBatch_Test {
     private static final Integer BATCH_SIZE = 100;

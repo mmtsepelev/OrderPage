@@ -4,8 +4,16 @@ public with sharing class TestUtils {
         Account acc = new Account(Name='Test');
         insert acc;
 
+        // Get standard Pricebook Id
+        Id pbId;
+        if(Test.isRunningTest()){
+            pbId = Test.getStandardPricebookId();
+        } else {
+            Pricebook2 stdPriceBook = [SELECT Id, Name FROM Pricebook2 WHERE isStandard = true LIMIT 1];
+            pbId = stdPriceBook.Id;
+        }
+
         // Create test Orders for Account
-        Id pbId = Test.getStandardPricebookId();
         List<Order> orders= new List<Order>();
         for(Integer i=0; i<ordersNum; i++)
         {
@@ -23,14 +31,14 @@ public with sharing class TestUtils {
         // Create standard PriceBook entries
         List<PricebookEntry> pbes = new List<PricebookEntry>();
         for(Integer i=0; i<productsNum; i++){
-            pbes.add(new PricebookEntry(Pricebook2Id = pbId, Product2Id = prods[i].Id, UnitPrice = Math.random()*100, IsActive = true));
+            pbes.add(new PricebookEntry(Pricebook2Id = pbId, Product2Id = prods[i].Id, UnitPrice = Math.random()*1000, IsActive = true));
         }
         insert pbes;
 
         List<OrderItem> orderItems = new List<OrderItem>();
         for(Order order : orders){
             for(Integer i = 0; i< productsNum; i++){
-                orderItems.add(new OrderItem(OrderId = order.Id, Product2Id = prods[i].Id, PricebookEntryId = pbes[i].Id, Quantity = 1, UnitPrice = Math.random()*100));
+                orderItems.add(new OrderItem(OrderId = order.Id, Product2Id = prods[i].Id, PricebookEntryId = pbes[i].Id, Quantity = 1, UnitPrice = Math.random()*1000));
             }
         }
         insert orderItems;

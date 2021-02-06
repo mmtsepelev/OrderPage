@@ -1,3 +1,4 @@
+/* Test class for HTTPConnector class features. */
 @isTest
 public with sharing class HTTPConnector_Test {
     private static final Integer ORDERS_NUM = 1;            // Number of Order records to be used by tests

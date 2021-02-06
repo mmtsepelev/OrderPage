@@ -1,3 +1,4 @@
+/* Test class for ProductsDataProvider class features. */
 @isTest
 public with sharing class ProductDataProvider_Test {
 
