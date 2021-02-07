@@ -1,0 +1,7 @@
+{
+    "TYPE":"OrderItems",
+    "Array":[
+        {"pbeId":"01u090000031gaMAAQ","Product2Id":"01t09000001c91fAAA","productName":"GenWatt Diesel 200kW","productPrice":25000},
+        {"pbeId":"01u090000031gabAAA","Product2Id":"01t09000001c91uAAA","productName":"GenWatt Gasoline 2000kW","productPrice":150000}
+    ]
+}

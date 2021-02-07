@@ -2,12 +2,14 @@ import { createElement } from 'lwc';
 import { registerTestWireAdapter,
         registerLdsTestWireAdapter,
         registerApexTestWireAdapter } from '@salesforce/sfdx-lwc-jest';
-import AvailableProducts from 'c/availableProducts';
 import { getRecord } from 'lightning/uiRecordApi';
-import getProductsData from '@salesforce/apex/ProductDataProvider.getProductsData';
+import { ShowToastEventName } from 'lightning/platformShowToastEvent';
 
 import { publish, subscribe, MessageContext } from 'lightning/messageService';
 import MESSAGE_CHANNEL from '@salesforce/messageChannel/OrderDataChannel__c';
+
+import AvailableProducts from 'c/availableProducts';
+import getProductsData from '@salesforce/apex/ProductDataProvider.getProductsData';
 
 const messageContextWireAdapter = registerTestWireAdapter(MessageContext);
 
@@ -15,9 +17,9 @@ const mockGetRecord = require('./data/getRecord.json');
 const getRecordWireAdapter = registerLdsTestWireAdapter(getRecord);
 
 const mockGetProductsData = require('./data/getProductsData.json');
+const mockGetProductsDataError = require('./data/getProductsDataError.json');
 const mockGetSelectedRows = require('./data/getSelectedRows.json');
 const mockMessageAddProduct = require('./data/messageAddProduct.json');
-const mockMessageConfirmed = require('./data/messageConfirmed.json');
 
 
 /* Mock getProductsData Apex method call. */
@@ -132,6 +134,31 @@ describe('c-available-products', () => {
             const buttonElement = element.shadowRoot.querySelector('lightning-button');
             expect(buttonElement.disabled).toBe(false);
         });
+    });
+
+
+    it('Shows error toast when error is returned', () => {
+        /* Assign mock value for rejected Apex promise. */
+        getProductsData.mockRejectedValue(mockGetProductsDataError);
+
+        /* Select current component. */
+        const element = document.querySelector('c-available-products');
+        
+        const handler = jest.fn();
+        element.addEventListener(ShowToastEventName, handler);
+        getRecordWireAdapter.error();
+                
+        /* Select child datatable element. */
+        const tableElement = element.shadowRoot.querySelector('lightning-datatable');
+
+        /* Dispatch rowselection event on datatable to populate required data on the current component. */
+        tableElement.dispatchEvent(new CustomEvent('loadmore', {"target":{}}));
+
+        return flushPromises().then(() => {
+            //expect(handler).toHaveBeenCalled();
+            expect(getProductsData).toHaveBeenCalledTimes(2);
+        });
+
     });
 
 });

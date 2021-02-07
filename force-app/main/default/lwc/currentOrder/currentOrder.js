@@ -8,7 +8,8 @@ import { LightningElement, wire, api } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
 import {refreshApex} from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { publish, createMessageContext, releaseMessageContext, subscribe, unsubscribe } from 'lightning/messageService';
+import { reduceErrors } from 'c/ldsUtils';
+import { publish, subscribe, MessageContext } from 'lightning/messageService';
 import MESSAGE_CHANNEL from '@salesforce/messageChannel/OrderDataChannel__c';
 
 /* Apex method imports. */
@@ -40,8 +41,7 @@ export default class CurrentOrder extends LightningElement {
     @api recordId;
     getRecordResponse;
 
-    /* Properties holds Lightning Message Service data. */
-    context = createMessageContext();
+    /* Lightning Message Service subscription info. */
     subscription = null;
 
     /* Property holds Confirm button state. */
@@ -55,7 +55,7 @@ export default class CurrentOrder extends LightningElement {
     * does not provide actual values from the database. */
     totalAmount;
 
-    /* Read current Order fields. */
+    /* Read current Order record. */
     @wire(getRecord,{ recordId : '$recordId', fields : FIELDS })
     wiredOrder(response) {
         this.getRecordResponse = response;
@@ -73,6 +73,12 @@ export default class CurrentOrder extends LightningElement {
             this.showErrorToast(error);
         }
     }
+
+
+    /* Unsubscribe will be called automatically on component descruction. */
+    @wire(MessageContext)
+    messageContext;
+
     
     connectedCallback(){
         /* Subscribe to LMS messages channel to get Order updates from AvailableProducts component. */
@@ -99,21 +105,11 @@ export default class CurrentOrder extends LightningElement {
         if(this.subscription) {
             return;
         }
-        this.subscription = subscribe(this.context, MESSAGE_CHANNEL, (message) => {
+        this.subscription = subscribe(this.messageContext, MESSAGE_CHANNEL, (message) => {
             this.handleMessage(message);
         });
     }
 
-
-    unsubscribe() {
-        unsubscribe(this.subscription);
-        this.subscription = null;
-    }
-
-
-    disconnectedCallback() {
-        releaseMessageContext(this.context);
-    }
 
     /* Handle message with Product data selected in AvailableProducts component to be added to the Order. 
     * Handle Confirmation message. */  
@@ -136,7 +132,7 @@ export default class CurrentOrder extends LightningElement {
          * Return result is updated ProductItems list containing actual values to be shown in the table. */
         upsertOrderItems({ OrderId : this.recordId, selectionJSON : selectionJSON })
             .then(data => {
-                console.log(COMPONENT+' Apex upsertOrderItems()', data);
+                console.log(COMPONENT+' Apex upsertOrderItems()', JSON.stringify(data));
                 if(Array.isArray(data)){
                     data.forEach(item => {
                         item.ProductName = item.Product2.Name;
@@ -162,7 +158,7 @@ export default class CurrentOrder extends LightningElement {
                     /* Publish confimation message for AvailableProducts component to disable adding new items to current Order.
                     * Also current component will handle this message to switch Confirm button state to disabled. */
                     const message = {'TYPE' : 'Confirmation'};;
-                    publish(this.context, MESSAGE_CHANNEL, message);
+                    publish(this.messageContext, MESSAGE_CHANNEL, message);
                 }
             })
             .catch(error => {
@@ -173,10 +169,11 @@ export default class CurrentOrder extends LightningElement {
 
     /* Show error toast with defined message on error. */
     showErrorToast(error) {
-        console.log(COMPONENT+' Error', JSON.stringify(error));
+        let message = reduceErrors(error).join(', ');
+        console.log(COMPONENT+' Error', message);
         const evt = new ShowToastEvent({
             title: 'Server Error',
-            message: error.body.message,
+            message: message,
             variant: 'error',
         });
         this.dispatchEvent(evt);

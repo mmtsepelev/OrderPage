@@ -7,7 +7,8 @@
 import { LightningElement, wire, api } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { publish,createMessageContext,releaseMessageContext, subscribe, unsubscribe } from 'lightning/messageService';
+import { reduceErrors } from 'c/ldsUtils';
+import { publish, subscribe, MessageContext } from 'lightning/messageService';
 import MESSAGE_CHANNEL from '@salesforce/messageChannel/OrderDataChannel__c';
 
 /* Apex method import. */
@@ -37,8 +38,7 @@ export default class AvailableProducts extends LightningElement {
     @api recordId;
     order;
 
-    /* Properties holds Lightning Message Service data. */
-    context = createMessageContext();
+    /* Lightning Message Service subscription info. */
     subscription = null;
 
     /* Property holds Add button state. */
@@ -72,6 +72,10 @@ export default class AvailableProducts extends LightningElement {
         }
     }
 
+    /* Unsubscribe will be called automatically on component descruction. */
+    @wire(MessageContext)
+    messageContext;
+
     connectedCallback() {
         /* Subscribe to Message Channel to get Order confirmation updates from CurrentOrder component. */
         this.subscribe();
@@ -95,21 +99,11 @@ export default class AvailableProducts extends LightningElement {
         if(this.subscription) {
             return;
         }
-        this.subscription = subscribe(this.context, MESSAGE_CHANNEL, (message) => {
+        this.subscription = subscribe(this.messageContext, MESSAGE_CHANNEL, (message) => {
             this.handleMessage(message);
         });
     }
 
-
-    unsubscribe() {
-        unsubscribe(this.subscription);
-        this.subscription = null;
-    }
-
-
-    disconnectedCallback() {
-        releaseMessageContext(this.context);
-    }
 
     /* Handle Order confirmation message from CurrentOrder component. */
     handleMessage(message){
@@ -148,16 +142,6 @@ export default class AvailableProducts extends LightningElement {
         });
     }
 
-    /* Show error toast with defined message. */
-    showErrorToast(error) {
-        console.log(COMPONENT+' Error',error);
-        const evt = new ShowToastEvent({
-            title: 'Server Error',
-            message: error.body.message,
-            variant: 'error',
-        });
-        this.dispatchEvent(evt);
-    }
         
     /* Get rows selection from datatable. */
     getSelectedRows(event) {
@@ -165,13 +149,27 @@ export default class AvailableProducts extends LightningElement {
         this.selectedRows = event.detail.selectedRows;
     }
 
+
     /* Read rows selection from datatable and publish message for CurrentOrder component to upsert selected records. */
     addOrderItem(event){
         console.log(COMPONENT+' addOrderItem()',this.selectedRows);
         if(this.selectedRows.length){
             const message = {'TYPE' : 'OrderItems', 'Array' : this.selectedRows};
-            publish(this.context, MESSAGE_CHANNEL, message);
+            publish(this.messageContext, MESSAGE_CHANNEL, message);
         }
+    }
+
+
+    /* Show error toast with defined message on error. */
+    showErrorToast(error) {
+        let message = reduceErrors(error).join(', ');
+        console.log(COMPONENT+' Error', message);
+        const evt = new ShowToastEvent({
+            title: 'Server Error',
+            message: message,
+            variant: 'error',
+        });
+        this.dispatchEvent(evt);
     }
 
 }
