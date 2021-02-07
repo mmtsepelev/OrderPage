@@ -32,6 +32,7 @@ public with sharing class HTTPConnector_Test {
         /* Test if Order was updated properly for successful response. */
         System.assertEquals(SUCCESS_RESPONSE, responseCode);
         System.assertEquals('Activated', updateOrder.Status);
+        System.assertEquals(false, updateOrder.Reconfirm__c);
     }
 
 
@@ -53,6 +54,7 @@ public with sharing class HTTPConnector_Test {
         /* Test if Order was not Activated by error response. */
         System.assertEquals(ERROR_RESPONSE, responseCode);
         System.assertEquals('Draft', updateOrder.Status);
+        System.assertEquals(true, updateOrder.Reconfirm__c);
     }
 
 }

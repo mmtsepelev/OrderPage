@@ -91,7 +91,7 @@ public with sharing class HTTPConnector {
             /* If success - update Order Status to Active and reset fields processed by batch. */
             if(statusCode == 200){
                 order.Status = 'Activated';
-                order.Reconfirm__c = true;
+                order.Reconfirm__c = false;
                 order.Retries__c = 0;
             }else{
                 /* If server returned an error status code - increment retries number and set 
