@@ -132,7 +132,7 @@ export default class CurrentOrder extends LightningElement {
          * Return result is updated ProductItems list containing actual values to be shown in the table. */
         upsertOrderItems({ OrderId : this.recordId, selectionJSON : selectionJSON })
             .then(data => {
-                console.log(COMPONENT+' Apex upsertOrderItems()', JSON.stringify(data));
+                console.log(COMPONENT+' Apex upsertOrderItems()', data);
                 if(Array.isArray(data)){
                     data.forEach(item => {
                         item.ProductName = item.Product2.Name;
@@ -151,19 +151,21 @@ export default class CurrentOrder extends LightningElement {
 
     /* Confirm Order in external system. HTTP request will be sent by Apex method. */
     handleConfirmOrder(event){
-        confirmOrder( {orderId : this.recordId} )
-            .then(data => {
-                console.log(COMPONENT+' Apex confirmOrder()', data);
-                if(data === 200){
-                    /* Publish confimation message for AvailableProducts component to disable adding new items to current Order.
-                    * Also current component will handle this message to switch Confirm button state to disabled. */
-                    const message = {'TYPE' : 'Confirmation'};;
-                    publish(this.messageContext, MESSAGE_CHANNEL, message);
-                }
-            })
-            .catch(error => {
-                this.showErrorToast(error);
-            });
+        if(this.tableData.length >0){
+            confirmOrder( {orderId : this.recordId} )
+                .then(data => {
+                    console.log(COMPONENT+' Apex confirmOrder()', data);
+                    if(data === 200){
+                        /* Publish confimation message for AvailableProducts component to disable adding new items to current Order.
+                        * Also current component will handle this message to switch Confirm button state to disabled. */
+                        const message = {'TYPE' : 'Confirmation'};;
+                        publish(this.messageContext, MESSAGE_CHANNEL, message);
+                    }
+                })
+                .catch(error => {
+                    this.showErrorToast(error);
+                });
+        }
     }
 
 

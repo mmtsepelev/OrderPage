@@ -6,6 +6,8 @@
 .sfdx/
 .localdevserver/
 
+**/aura/**
+
 # LWC VSCode autocomplete
 **/lwc/jsconfig.json
 
