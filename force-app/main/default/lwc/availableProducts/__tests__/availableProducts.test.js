@@ -62,7 +62,7 @@ describe('c-available-products', () => {
         return new Promise((resolve) => setImmediate(resolve));
     }
 
-    it('Test loadMore table action loads data block by Apex call', () => {
+    it('Test if loadMore table action loads data block by Apex call', () => {
         getRecordWireAdapter.emit(mockGetRecord);
 
         /* Set params for getProductsBlock Apex method. */
@@ -83,7 +83,7 @@ describe('c-available-products', () => {
 
     });
 
-    it('Test selected Products are posted to Ligthning Message Channel', () => {
+    it('Test if selected Products are posted to Ligthning Message Channel', () => {
         getRecordWireAdapter.emit(mockGetRecord);
 
         /* Select current component. */
@@ -110,14 +110,14 @@ describe('c-available-products', () => {
     });
 
 
-    it('Test Lightning Message Channel Subscribe method is called', () => {
+    it('Test if Lightning Message Channel Subscribe method is called', () => {
         /* Test if component subscribed after connected to the DOM. */
         expect(subscribe).toHaveBeenCalled();
         expect(subscribe.mock.calls[0][1]).toBe(MESSAGE_CHANNEL);
     });
 
 
-    it('Test if component process message sent through Lightning Message Channel', () => {
+    it('Test if component process Confirm message sent through Lightning Message Channel', () => {
         /* Select current component. */
         const element = document.querySelector('c-available-products');
         
@@ -132,12 +132,12 @@ describe('c-available-products', () => {
         return flushPromises().then(() => {
             /* Test if Confirm button was disabled. */
             const buttonElement = element.shadowRoot.querySelector('lightning-button');
-            expect(buttonElement.disabled).toBe(false);
+            expect(buttonElement.disabled).toBe(true);
         });
     });
 
 
-    it('Shows error toast when error is returned', () => {
+    it('Shows error toast when error is returned by @wire service', () => {
         /* Assign mock value for rejected Apex promise. */
         getProductsData.mockRejectedValue(mockGetProductsDataError);
 
@@ -147,16 +147,9 @@ describe('c-available-products', () => {
         const handler = jest.fn();
         element.addEventListener(ShowToastEventName, handler);
         getRecordWireAdapter.error();
-                
-        /* Select child datatable element. */
-        const tableElement = element.shadowRoot.querySelector('lightning-datatable');
-
-        /* Dispatch rowselection event on datatable to populate required data on the current component. */
-        tableElement.dispatchEvent(new CustomEvent('loadmore', {"target":{}}));
 
         return flushPromises().then(() => {
-            //expect(handler).toHaveBeenCalled();
-            expect(getProductsData).toHaveBeenCalledTimes(2);
+            expect(handler).toHaveBeenCalled();
         });
 
     });
