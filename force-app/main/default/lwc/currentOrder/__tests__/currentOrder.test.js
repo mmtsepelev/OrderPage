@@ -6,6 +6,7 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { ShowToastEventName } from 'lightning/platformShowToastEvent';
 
 import CurrentOrder from 'c/currentOrder';
+import getOrderItems from '@salesforce/apex/ProductDataProvider.getOrderItems';
 import upsertOrderItems from '@salesforce/apex/ProductDataProvider.upsertOrderItems';
 import confirmOrder from '@salesforce/apex/HTTPConnector.confirmOrder';
 
@@ -18,8 +19,19 @@ const mockGetRecord = require('./data/getRecord.json');
 const getRecordWireAdapter = registerLdsTestWireAdapter(getRecord);
 
 const mockUpsertOrderItems = require('./data/upsertOrderItems.json');
+const mockGetOrderItems = require('./data/getOrderItems.json');
 const mockMessageAddProducts = require('./data/messageAddProducts.json');
 
+
+/* Mock getOrderItems Apex method call. */
+jest.mock('@salesforce/apex/ProductDataProvider.getOrderItems',
+    () => {
+        return {
+            default: jest.fn()
+        };
+    },
+    { virtual: true }
+);
 
 /* Mock upsertOrderItems Apex method call. */
 jest.mock('@salesforce/apex/ProductDataProvider.upsertOrderItems',
@@ -45,7 +57,8 @@ jest.mock('@salesforce/apex/HTTPConnector.confirmOrder',
 describe('c-current-order', () => {
     /* Create new component instance for each test. */
      beforeEach(() => {
-         /* Mock data returned from getProductsBlock Apex method. */
+         /* Mock data returned from Apex methods. */
+         getOrderItems.mockResolvedValue(mockGetOrderItems);
          upsertOrderItems.mockResolvedValue(mockUpsertOrderItems);
          confirmOrder.mockResolvedValue('200');
          
@@ -59,6 +72,7 @@ describe('c-current-order', () => {
          document.body.appendChild(element);
 
          expect(subscribe).toHaveBeenCalled();
+         expect(getOrderItems).toHaveBeenCalled();
      });
      
      afterEach(() => {

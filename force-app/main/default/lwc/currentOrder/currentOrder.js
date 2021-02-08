@@ -87,7 +87,7 @@ export default class CurrentOrder extends LightningElement {
         getOrderItems( { OrderId : this.recordId } )
         .then(data => {
             if(Array.isArray(data)){
-                console.log(COMPONENT+' Apex getOrderItems()',data);
+                console.log(COMPONENT+' Apex getOrderItems()',JSON.stringify(data));
                 data.forEach(item => {
                     item.ProductName = item.Product2.Name;
                     this.totalAmount = item.Order.TotalAmount;
