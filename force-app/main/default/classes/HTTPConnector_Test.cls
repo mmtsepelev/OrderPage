@@ -17,7 +17,7 @@ public with sharing class HTTPConnector_Test {
     @isTest
     public static void Test_Confirm(){
         Integer responseCode;
-        Order order = [SELECT Id, Status FROM Order];
+        Order order = [SELECT Id, Status, Reconfirm__c FROM Order];
         /* Set HTTP mock object for the test since we are making callouts. */
         Test.setMock(HttpCalloutMock.class, new ConfirmResponseMock(SUCCESS_RESPONSE));
 
@@ -27,7 +27,7 @@ public with sharing class HTTPConnector_Test {
         Test.stopTest();
 
         /* Query for updated Order from database. */
-        Order updateOrder = [SELECT Id, Status FROM Order];
+        Order updateOrder = [SELECT Id, Status, Reconfirm__c FROM Order];
 
         /* Test if Order was updated properly for successful response. */
         System.assertEquals(SUCCESS_RESPONSE, responseCode);
@@ -39,7 +39,7 @@ public with sharing class HTTPConnector_Test {
     @isTest
     public static void Test_Error(){
         Integer responseCode;
-        Order order = [SELECT Id, Status FROM Order];
+        Order order = [SELECT Id, Status, Reconfirm__c FROM Order];
         /* Set HTTP mock object for the test since we are making callouts. */
         Test.setMock(HttpCalloutMock.class, new ConfirmResponseMock(ERROR_RESPONSE));
 
@@ -49,7 +49,7 @@ public with sharing class HTTPConnector_Test {
         Test.stopTest();
 
         /* Query for updated Order from database. */
-        Order updateOrder = [SELECT Id, Status FROM Order];
+        Order updateOrder = [SELECT Id, Status, Reconfirm__c FROM Order];
 
         /* Test if Order was not Activated by error response. */
         System.assertEquals(ERROR_RESPONSE, responseCode);

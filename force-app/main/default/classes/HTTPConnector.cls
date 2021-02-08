@@ -50,74 +50,78 @@ public with sharing class HTTPConnector {
     }
 
 
-    /* This method is called if Confirm button is pressed in CurrentOrder component. 
-    * It queries current Order items data from database, packs it to required request body format 
-    * and sends it to external system. 
-    * @param: orderId - Id of the Order to be confirmed in external system.
-    * @return: StatusCode of HTTP request. It will be used to update Order Status in UI for successful request. */
+    /* This method is called if Confirm button is pressed in CurrentOrder component. */
     @AuraEnabled(cacheable=false)
     public static Integer confirmOrder(Id orderId){
-        Order order;
-        try {
-            /* Get Order record data with related OrderItems. */
-            order = [SELECT Account.AccountNumber, 
-                    OrderNumber, 
-                    Type, 
-                    Status, 
-                    Reconfirm__c,
-                    Retries__c,
-                    (SELECT Product2.Name, Product2.ProductCode, UnitPrice, Quantity FROM OrderItems) 
-                    FROM Order 
-                    WHERE Id =: orderId];
 
-            /* Build request body object to be sirialized in request and fill it with Order data. */
-            List<Map<String,Object>> products = new List<Map<String,Object>>();
-            for(OrderItem item : order.OrderItems){
-                Map<String,Object> field = new Map<String,Object>();
-                field.put('name', item.Product2.Name);
-                field.put('code', item.Product2.ProductCode);
-                field.put('unitPrice', item.UnitPrice);
-                field.put('quantity', item.Quantity);
-                products.add(field);
-            }
-
-            RequestBody body = new RequestBody(order.Account.AccountNumber, order.OrderNumber, order.Type, order.Status, products);
-
-            /* Send HTTP request to confirm Order in external system. */ 
-            HttpResponse resp = doCallout(body);
-
-            Integer statusCode = resp.getStatusCode();
-
-            /* If success - update Order Status to Active and reset fields processed by batch. */
-            if(statusCode == 200){
-                order.Status = 'Activated';
-                order.Reconfirm__c = false;
-                order.Retries__c = 0;
-            }else{
-                /* If server returned an error status code - increment retries number and set 
-                * Reconfirm field in order for record to be picked up by batch job to retry the request after defined time. */
-                order.Reconfirm__c = true;
-                order.Retries__c = order.Retries__c + 1;
-            }
-
-            /* Skip update if method is called from batch context. */
-            if(!System.isBatch()){
-                update order;
-            }
+        /* Get Order record with related OrderItems. */
+        Order order = [SELECT Account.AccountNumber, 
+                                OrderNumber, 
+                                Type, 
+                                Status, 
+                                Reconfirm__c,
+                                Retries__c,
+                                (SELECT Product2.Name, Product2.ProductCode, UnitPrice, Quantity FROM OrderItems) 
+                                FROM Order 
+                                WHERE Id =: orderId];
             
-            return statusCode;
-        } catch (Exception e) {
-            /* If callout fails, update Order to be picked up by batch job to retry the request and re-throw exception
-            ** to LWC component to show error toast. */
-            if(!System.isBatch()){
-                order.Reconfirm__c = true;
-                order.Retries__c = order.Retries__c + 1;
-                update order;
+            try{
+                return confirmOrderRequest(order);
+            } catch (Exception e) {
+                /* If callout fails, update Order to be picked up by batch job to retry the request and re-throw exception
+                ** to LWC component to show error toast. */
+                if(!System.isBatch()){
+                    order.Reconfirm__c = true;
+                    update order;
+                }
+    
+                System.Debug(e.getMessage());
+                throw new AuraHandledException(e.getMessage());
             }
+    
+    }
 
-            System.Debug(e.getMessage());
-            throw new AuraHandledException(e.getMessage());
+
+    /* This method does HHTP request to external system with requred JSON request body assembled from Ored and related
+    * OrderItems records data.
+    * @param: orderId - Id of the Order to be confirmed in external system.
+    * @return: StatusCode of HTTP request. It will be used to update Order Status in UI for successful request.*/
+    public static Integer confirmOrderRequest(Order order){
+        /* Build request body object to be sirialized in request and fill it with Order data. */
+        List<Map<String,Object>> products = new List<Map<String,Object>>();
+        for(OrderItem item : order.OrderItems){
+            Map<String,Object> field = new Map<String,Object>();
+            field.put('name', item.Product2.Name);
+            field.put('code', item.Product2.ProductCode);
+            field.put('unitPrice', item.UnitPrice);
+            field.put('quantity', item.Quantity);
+            products.add(field);
         }
+
+        RequestBody body = new RequestBody(order.Account.AccountNumber, order.OrderNumber, order.Type, order.Status, products);
+
+        /* Send HTTP request to confirm Order in external system. */ 
+        HttpResponse resp = doCallout(body);
+
+        Integer statusCode = resp.getStatusCode();
+
+        /* If success - update Order Status to Active and reset fields processed by batch. */
+        if(statusCode == 200){
+            order.Status = 'Activated';
+            order.Reconfirm__c = false;
+            order.Retries__c = 0;
+        }else{
+            /* If server returned an error status code - increment retries number and set 
+            * Reconfirm field in order for record to be picked up by batch job to retry the request after defined time. */
+            order.Reconfirm__c = true;
+        }
+
+        /* Skip update if method is called from batch context. */
+        if(!System.isBatch()){
+            update order;
+        }
+            
+        return statusCode;
     }
     
 

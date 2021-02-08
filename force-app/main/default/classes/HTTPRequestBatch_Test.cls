@@ -25,7 +25,7 @@ public with sharing class HTTPRequestBatch_Test {
         Test.stopTest();
 
         /* Test if Orders were activated. */
-        for(Order order : [SELECT Id, Status FROM Order]){
+        for(Order order : [SELECT Id, Status, Reconfirm__c FROM Order]){
             System.assertEquals('Activated', order.Status);
         }
     }
@@ -42,8 +42,9 @@ public with sharing class HTTPRequestBatch_Test {
         Test.stopTest();
 
         /* Test if Orders were activated. */
-        for(Order order : [SELECT Id, Status FROM Order]){
+        for(Order order : [SELECT Id, Status, Reconfirm__c FROM Order]){
             System.assertEquals('Draft', order.Status);
+            System.assertEquals(true, order.Reconfirm__c);
         }
     }
 }
