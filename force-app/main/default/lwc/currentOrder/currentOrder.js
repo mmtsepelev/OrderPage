@@ -154,7 +154,7 @@ export default class CurrentOrder extends LightningElement {
         if(this.tableData.length >0){
             confirmOrder( {orderId : this.recordId} )
                 .then(data => {
-                    console.log(COMPONENT+' Apex confirmOrder()', data);
+                    console.log(COMPONENT+' Apex confirmOrder()', JSON.stringify(data));
                     if(data === 200){
                         /* Publish confimation message for AvailableProducts component to disable adding new items to current Order.
                         * Also current component will handle this message to switch Confirm button state to disabled. */
